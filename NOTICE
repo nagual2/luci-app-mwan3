@@ -1,0 +1,10 @@
+luci-app-mwan3 (nagual2 fork)
+Copyright 2026 nagual2
+
+LuCI application derived from OpenWrt LuCI luci-app-mwan3 (GPL-2.0).
+Copyright 2017 Dan Luedtke and LuCI contributors.
+
+Additional GUI for nagual2/mwan3 patches:
+- track_host_routes
+- connected_ipv6_min_prefixlen
+- sync-track-routes / flush-conntrack diagnostics

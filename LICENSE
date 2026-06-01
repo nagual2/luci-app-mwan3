@@ -1,0 +1,11 @@
+luci-app-mwan3 — LuCI application for mwan3 (nagual2 fork)
+Copyright 2026 nagual2
+
+Based on luci-app-mwan3 from OpenWrt LuCI (GPL-2.0).
+Upstream: https://github.com/openwrt/luci/tree/master/applications/luci-app-mwan3
+
+Requires mwan3 from https://github.com/nagual2/mwan3 (>= 2.12.1-3).
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2.
+See https://www.gnu.org/licenses/gpl-2.0.html

@@ -1,0 +1,61 @@
+SHELL := /bin/sh
+.RECIPEPREFIX := >
+
+PKG_NAME := luci-app-mwan3
+PROJECT_VERSION ?=
+GIT_TAG := $(strip $(shell git describe --tags --match 'v*' --abbrev=0 2>/dev/null || true))
+PKG_VERSION := $(strip $(if $(PROJECT_VERSION),$(PROJECT_VERSION),$(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),1.0.0)))
+PKG_RELEASE ?= 1
+
+OUTPUT_DIR ?= dist
+WORK_DIR := build/ipk
+DATA_DIR := $(WORK_DIR)/data
+CONTROL_DIR := $(WORK_DIR)/control
+
+IPK_FILENAME := $(PKG_NAME)_$(PKG_VERSION)-$(PKG_RELEASE)_all.ipk
+IPK_PATH := $(OUTPUT_DIR)/$(IPK_FILENAME)
+
+.PHONY: all ipk apk clean test
+
+all: ipk apk
+
+apk:
+> @chmod +x scripts/build-apk-mkpkg.sh
+> PROJECT_VERSION="$(PKG_VERSION)" PKG_RELEASE="$(PKG_RELEASE)" ./scripts/build-apk-mkpkg.sh
+
+test:
+> @if [ -d tests ]; then bash tests/check_structure.sh; else echo "tests/ missing"; fi
+
+ipk: $(IPK_PATH)
+
+$(IPK_PATH): Makefile LICENSE NOTICE README.md README.ru.md scripts/stage-docs.sh
+> @test -f htdocs/luci-static/resources/view/mwan3/network/globals.js
+> @echo "Building IPK $(PKG_NAME) $(PKG_VERSION)-$(PKG_RELEASE)..."
+> rm -rf $(WORK_DIR)
+> mkdir -p $(DATA_DIR)/www $(DATA_DIR)/usr $(DATA_DIR)/etc
+> cp -a htdocs/luci-static $(DATA_DIR)/www/
+> cp -a root/usr $(DATA_DIR)/
+> cp -a root/etc $(DATA_DIR)/
+> chmod +x scripts/stage-docs.sh
+> ./scripts/stage-docs.sh $(DATA_DIR) luci-app-mwan3
+> mkdir -p $(CONTROL_DIR)
+> printf 'Package: %s\n' $(PKG_NAME) > $(CONTROL_DIR)/control
+> printf 'Version: %s-%s\n' $(PKG_VERSION) $(PKG_RELEASE) >> $(CONTROL_DIR)/control
+> printf 'Architecture: all\n' >> $(CONTROL_DIR)/control
+> printf 'Section: luci\n' >> $(CONTROL_DIR)/control
+> printf 'Priority: optional\n' >> $(CONTROL_DIR)/control
+> printf 'Maintainer: nagual2\n' >> $(CONTROL_DIR)/control
+> printf 'Depends: luci-base, mwan3\n' >> $(CONTROL_DIR)/control
+> printf 'Description: LuCI for mwan3 with nagual2 IPv6 multi-WAN options.\n' >> $(CONTROL_DIR)/control
+> printf '#!/bin/sh\n[ -n "$${IPKG_INSTROOT}" ] || { [ -x /etc/uci-defaults/60_luci-mwan3 ] && /etc/uci-defaults/60_luci-mwan3; rm -f /tmp/luci-indexcache.*; rm -rf /tmp/luci-modulecache/; /etc/init.d/rpcd reload 2>/dev/null; exit 0; }\n' > $(CONTROL_DIR)/postinst
+> chmod 0755 $(CONTROL_DIR)/postinst
+> tar -C $(DATA_DIR) -czf $(WORK_DIR)/data.tar.gz .
+> tar -C $(CONTROL_DIR) -czf $(WORK_DIR)/control.tar.gz control postinst
+> printf '2.0\n' > $(WORK_DIR)/debian-binary
+> mkdir -p $(OUTPUT_DIR)
+> rm -f $(IPK_PATH)
+> (cd $(WORK_DIR) && ar rcs $(abspath $(IPK_PATH)) debian-binary control.tar.gz data.tar.gz)
+> @echo "Package built: $(IPK_PATH)"
+
+clean:
+> rm -rf build/ipk build/sdk $(OUTPUT_DIR)

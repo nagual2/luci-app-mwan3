@@ -28,7 +28,7 @@ test:
 
 ipk: $(IPK_PATH)
 
-$(IPK_PATH): Makefile LICENSE NOTICE README.md README.ru.md scripts/stage-docs.sh
+$(IPK_PATH): Makefile LICENSE NOTICE README.md README.ru.md README.de.md scripts/stage-docs.sh
 > @test -f htdocs/luci-static/resources/view/mwan3/network/globals.js
 > @echo "Building IPK $(PKG_NAME) $(PKG_VERSION)-$(PKG_RELEASE)..."
 > rm -rf $(WORK_DIR)
